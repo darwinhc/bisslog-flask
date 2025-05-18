@@ -1,0 +1,5 @@
+bisslog>=0.0.3
+bisslog-schema[yaml]
+flask
+flask-cors>=5.0.1
+
