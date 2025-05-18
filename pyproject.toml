@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bisslog_flask"
+dynamic = ["version"]
+description = "It is an extension of the bisslog library to support processes with flask"
+readme = "README.md"
+authors = [
+    {name = "Darwin Stiven Herrera Cartagena", email = "darwinsherrerac@gmail.com"}
+]
+requires-python = ">=3.7"
+dependencies = []
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent"
+]
+keywords = ["hexagonal", "adapters", "bisslog", "flask"]
+[project.urls]
+Homepage = "https://github.com/darwinhc/bisslog-flask"
+
+[tool.setuptools.packages.find]
+include = ["bisslog_flask", "bisslog_flask.*"]
+[tool.setuptools_scm]
+version_scheme = "post-release"
+local_scheme = "no-local-version"
+
