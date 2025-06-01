@@ -1,13 +1,6 @@
 name: Deploy to TestPyPI
 
 on:
-  pull_request:
-    branches:
-      - qa
-    paths:
-      - "bisslog_flask/**"
-      - "pyproject.toml"
-
   push:
     branches:
       - qa
