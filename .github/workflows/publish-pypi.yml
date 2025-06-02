@@ -1,0 +1,66 @@
+name: Deploy to PyPI
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  run-changes-reception:
+    uses: darwinhc/bisslog-flask/.github/workflows/receive-changes.yml@master
+
+  determine-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set-version.outputs.VERSION }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools_scm
+
+      - name: Determine version for TestPyPI
+        id: set-version
+        run: |
+          VERSION=$(python -c "import setuptools_scm; print(setuptools_scm.get_version(version_scheme='post-release', local_scheme='no-local-version'))")
+          VERSION=$(echo "$VERSION" | sed -E 's/\.post([0-9]+)/.\1.${{ github.run_number }}/')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [run-changes-reception, determine-version]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine setuptools_scm
+      - name: Printing version to build
+        run: echo ${{ needs.determine-version.outputs.version }}
+
+      - name: Build package with correct version
+        run: |
+          python -m build
+        env:
+          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ needs.determine-version.outputs.version }}
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: twine upload dist/*
