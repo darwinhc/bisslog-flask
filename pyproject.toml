@@ -29,6 +29,9 @@ Homepage = "https://github.com/darwinhc/bisslog-flask"
 websocket = ["flask-socketio"]
 cors = ["flask-cors>=6.0.0"]
 
+[project.scripts]
+bisslog_flask = "bisslog_flask.cli:main"
+
 [tool.setuptools.packages.find]
 include = ["bisslog_flask", "bisslog_flask.*"]
 
