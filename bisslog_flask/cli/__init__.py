@@ -41,7 +41,7 @@ def main():
                             help="Path to metadata file (YAML or JSON).")
     run_parser.add_argument("--use-cases-folder-path", type=str, default=None,
                             help="Path to use case source folder.")
-    run_parser.add_argument("--infra-folder-path", type=str, default=None,
+    run_parser.add_argument("--infra-path", type=str, default=None,
                             help="Path to infrastructure code folder (optional).")
     run_parser.add_argument("--encoding", type=str, default="utf-8",
                             help="File encoding (default: utf-8).")
@@ -57,7 +57,7 @@ def main():
                               help="Path to metadata file (YAML or JSON).")
     build_parser.add_argument("--use-cases-folder-path", type=str, default=None,
                               help="Path to use case source folder.")
-    build_parser.add_argument("--infra-folder-path", type=str, default=None,
+    build_parser.add_argument("--infra-path", type=str, default=None,
                               help="Path to infrastructure code folder (optional).")
     build_parser.add_argument("--encoding", type=str, default="utf-8",
                               help="File encoding (default: utf-8).")
@@ -70,7 +70,7 @@ def main():
         if args.command == "run":
             run(metadata_file=args.metadata_file,
                 use_cases_folder_path=args.use_cases_folder_path,
-                infra_folder_path=args.infra_folder_path,
+                infra_path=args.infra_path,
                 encoding=args.encoding,
                 secret_key=args.secret_key,
                 jwt_secret_key=args.jwt_secret_key)
@@ -78,7 +78,7 @@ def main():
             build_boiler_plate_flask(
                 metadata_file=args.metadata_file,
                 use_cases_folder_path=args.use_cases_folder_path,
-                infra_folder_path=args.infra_folder_path,
+                infra_path=args.infra_path,
                 encoding=args.encoding,
                 target_filename=args.target_filename
             )

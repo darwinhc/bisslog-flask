@@ -14,7 +14,7 @@ def test_build_boiler_plate_flask_writes_output(mock_file, mock_builder):
     build_boiler_plate_flask(
         metadata_file="meta.yaml",
         use_cases_folder_path="src/",
-        infra_folder_path="infra/",
+        infra_path="infra/",
         encoding="utf-8",
         target_filename="output.py"
     )

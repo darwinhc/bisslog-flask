@@ -15,7 +15,7 @@ from ...builder.builder_flask_app_manager import bisslog_flask_builder
 def build_boiler_plate_flask(
         metadata_file: Optional[str] = None,
         use_cases_folder_path: Optional[str] = None,
-        infra_folder_path: Optional[str] = None,
+        infra_path: Optional[str] = None,
         encoding: str = "utf-8",
         target_filename: str = "flask_app.py"
 ):
@@ -32,7 +32,7 @@ def build_boiler_plate_flask(
         Path to the YAML or JSON metadata file describing the service.
     use_cases_folder_path : str, optional
         Path to the folder where the use case implementations are located.
-    infra_folder_path : str, optional
+    infra_path : str, optional
         Path to the folder where infrastructure components (e.g., adapters) are defined.
     encoding : str, default="utf-8"
         The file encoding to use when reading and writing files.
@@ -47,7 +47,7 @@ def build_boiler_plate_flask(
     flask_boiler_plate_string = bisslog_flask_builder(
         metadata_file=metadata_file,
         use_cases_folder_path=use_cases_folder_path,
-        infra_folder_path=infra_folder_path,
+        infra_path=infra_path,
         encoding=encoding
     )
 
