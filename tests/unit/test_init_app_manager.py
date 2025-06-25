@@ -23,6 +23,11 @@ def fake_use_case_info():
         triggers=[http_trigger, ws_trigger]
     )
 
+@pytest.fixture
+def fake_force_import():
+    force_import = MagicMock()
+    return force_import
+
 
 @pytest.fixture
 def mock_read_service_info_with_code(fake_use_case_info):
@@ -35,7 +40,8 @@ def mock_read_service_info_with_code(fake_use_case_info):
     )
 
 
-def test_init_flask_app_registers_routes(monkeypatch, fake_use_case_info, mock_read_service_info_with_code):
+def test_init_flask_app_registers_routes(monkeypatch, fake_use_case_info,
+                                         mock_read_service_info_with_code, fake_force_import):
     # Arrange
     mock_http = MagicMock()
     mock_ws = MagicMock()
@@ -44,7 +50,7 @@ def test_init_flask_app_registers_routes(monkeypatch, fake_use_case_info, mock_r
     monkeypatch.setattr("bisslog_flask.initializer.init_flask_app_manager.read_service_info_with_code",
                         lambda *args, **kwargs: mock_read_service_info_with_code)
 
-    app_manager = InitFlaskAppManager(http_processor=mock_http, websocket_processor=mock_ws)
+    app_manager = InitFlaskAppManager(http_processor=mock_http, websocket_processor=mock_ws, force_import=fake_force_import)
 
     # Act
     app = app_manager(metadata_file="metadata.yml", use_cases_folder_path="src/uc")
@@ -56,7 +62,7 @@ def test_init_flask_app_registers_routes(monkeypatch, fake_use_case_info, mock_r
 
 
 
-def test_existing_app_is_used(monkeypatch, fake_use_case_info, mock_read_service_info_with_code):
+def test_existing_app_is_used(monkeypatch, fake_use_case_info, mock_read_service_info_with_code, fake_force_import):
     app = Flask("ExistingApp")
 
     monkeypatch.setattr("bisslog_flask.initializer.init_flask_app_manager.read_service_info_with_code",
@@ -65,7 +71,8 @@ def test_existing_app_is_used(monkeypatch, fake_use_case_info, mock_read_service
     mock_http = MagicMock()
     mock_ws = MagicMock()
 
-    app_manager = InitFlaskAppManager(http_processor=mock_http, websocket_processor=mock_ws)
+    app_manager = InitFlaskAppManager(http_processor=mock_http, websocket_processor=mock_ws,
+                                      force_import=fake_force_import)
     result = app_manager(metadata_file="x", use_cases_folder_path="x", app=app)
 
     assert result is app
