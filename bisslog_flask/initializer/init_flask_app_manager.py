@@ -18,6 +18,8 @@ Dependencies
 from typing import Optional, Callable
 
 from bisslog_schema import read_service_info_with_code
+from bisslog_schema.eager_import_module_or_package import EagerImportModulePackage
+from bisslog_schema.setup import run_setup
 from bisslog_schema.schema import UseCaseInfo, TriggerHttp, TriggerWebsocket
 from flask import Flask
 
@@ -42,14 +44,17 @@ class InitFlaskAppManager:
     """
 
     def __init__(self, http_processor: BisslogFlaskResolver,
-                 websocket_processor: BisslogFlaskResolver) -> None:
+                 websocket_processor: BisslogFlaskResolver,
+                 force_import: EagerImportModulePackage) -> None:
         self._http_processor = http_processor
         self._websocket_processor = websocket_processor
+        self._force_import = force_import
 
     def __call__(
             self,
             metadata_file: Optional[str] = None,
             use_cases_folder_path: Optional[str] = None,
+            infra_folder_path: Optional[str] = None,
             app: Optional[Flask] = None,
             *,
             encoding: str = "utf-8",
@@ -94,6 +99,11 @@ class InitFlaskAppManager:
         service_info = full_service_data.declared_metadata
         use_cases = full_service_data.discovered_use_cases
 
+        # Force import
+        self._force_import(infra_folder_path)
+        # Run global setup if defined
+        run_setup("flask")
+
         # Initialize Flask app
         if app is None:
             app = Flask(service_info.name)
@@ -120,4 +130,5 @@ class InitFlaskAppManager:
         return app
 
 
-BisslogFlask = InitFlaskAppManager(BisslogFlaskHttpResolver(), BisslogFlaskWebSocketResolver())
+BisslogFlask = InitFlaskAppManager(BisslogFlaskHttpResolver(), BisslogFlaskWebSocketResolver(),
+                                   EagerImportModulePackage(("src.infra", "infra")))

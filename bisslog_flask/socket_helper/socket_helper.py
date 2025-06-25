@@ -20,9 +20,6 @@ class BisslogFlaskSocketHelper(WebSocketManager):
     a consistent interface.
     """
 
-    def __init__(self, conn) -> None:
-        super().__init__(conn)
-
     def emit(self, event: str, connection_id: str, payload: Any,
              broadcast: bool = False, to: str = None):
         """
