@@ -1,79 +1,99 @@
+# test_builder_flask_app_manager.py
+
 import pytest
-from unittest.mock import MagicMock, patch
-
-from bisslog_schema.use_case_code_inspector.use_case_code_metadata import UseCaseCodeInfoClass, \
-    UseCaseCodeInfoObject
-
+import json
+from unittest.mock import patch, MagicMock
 from bisslog_flask.builder.builder_flask_app_manager import BuilderFlaskAppManager
 from bisslog_flask.builder.static_python_construct_data import StaticPythonConstructData
+from bisslog_schema.schema import TriggerHttp, TriggerWebsocket
+from bisslog_schema.use_case_code_inspector.use_case_code_metadata import (
+    UseCaseCodeInfoClass, UseCaseCodeInfoObject, UseCaseCodeInfo
+)
 
 
-@pytest.fixture
-def sample_class_use_case():
-    mock_info = UseCaseCodeInfoClass("my_use_case_cls", "docs", "my_module", "MyUseCase")
-    return mock_info
+@pytest.mark.parametrize("n_params,expected", [
+    (0, "setup_func()"),
+    (1, "setup_func(\"flask\")"),
+    (2, "setup_func(\"flask\")  # TODO: change this")
+])
+@patch("bisslog_flask.builder.builder_flask_app_manager.get_setup_metadata")
+def test_get_bisslog_setup_with_setup_function(mock_get_setup, n_params, expected):
+    setup_func = MagicMock(function_name="setup_func", module="setup_module", n_params=n_params)
+    mock_get_setup.return_value = MagicMock(setup_function=setup_func, runtime={})
+    result = BuilderFlaskAppManager._get_bisslog_setup()
+    assert expected in result.build
+    assert "setup_module" in result.importing
 
 
-@pytest.fixture
-def sample_object_use_case():
-    mock_info = UseCaseCodeInfoObject("my_use_case", "docs", "my_module", "my_use_case")
-    return mock_info
+@patch("bisslog_flask.builder.builder_flask_app_manager.get_setup_metadata")
+def test_get_bisslog_setup_with_runtime_fallback(mock_get_setup):
+    runtime_func = MagicMock(function_name="custom_setup", module="runtime_module")
+    mock_get_setup.return_value = MagicMock(setup_function=None, runtime={"flask": runtime_func})
+    result = BuilderFlaskAppManager._get_bisslog_setup()
+    assert "custom_setup()" in result.build
+    assert "runtime_module" in result.importing
 
 
-def test_generate_security_code():
-    result = BuilderFlaskAppManager._generate_security_code()
-    assert isinstance(result, StaticPythonConstructData)
-    assert "SECRET_KEY" in result.build
-    assert "JWT_SECRET_KEY" in result.build
+@patch("bisslog_flask.builder.builder_flask_app_manager.get_setup_metadata", return_value=None)
+def test_get_bisslog_setup_none(mock_get_setup):
+    result = BuilderFlaskAppManager._get_bisslog_setup()
+    assert result is None
 
 
-def test_generate_use_case_code_build_class(sample_class_use_case):
-    uc_name, code_data = BuilderFlaskAppManager._generate_use_case_code_build(sample_class_use_case)
-    assert uc_name == "my_use_case_cls_uc"
-    assert "MyUseCase()" in code_data.build
-    assert "my_module" in code_data.importing
-    assert "MyUseCase" in code_data.importing["my_module"]
+def test_generate_use_case_code_build_class():
+    uc = UseCaseCodeInfoClass(name="my_uc", docs="", module="mymodule", class_name="MyClass")
+    name, result = BuilderFlaskAppManager._generate_use_case_code_build(uc)
+    assert name == "my_uc_uc"
+    assert "MyClass()" in result.build
 
 
-def test_generate_use_case_code_build_object(sample_object_use_case):
-    uc_name, code_data = BuilderFlaskAppManager._generate_use_case_code_build(sample_object_use_case)
-    assert uc_name == "my_use_case"
-    assert "my_module" in code_data.importing
-    assert "my_use_case" in code_data.importing["my_module"]
+def test_generate_use_case_code_build_object():
+    uc = UseCaseCodeInfoObject(name="my_uc", docs="", module="mymodule", var_name="uc_var")
+    name, result = BuilderFlaskAppManager._generate_use_case_code_build(uc)
+    assert name == "uc_var"
+    assert result.build == ""
 
 
 def test_generate_use_case_code_build_invalid_type():
     with pytest.raises(ValueError):
-        BuilderFlaskAppManager._generate_use_case_code_build(246)
+        class Invalid(UseCaseCodeInfo): pass
+        BuilderFlaskAppManager._generate_use_case_code_build(Invalid("x", "", ""))
 
 
-def test_get_bisslog_setup_none():
-    with patch("bisslog_flask.builder.builder_flask_app_manager.get_setup_metadata", return_value=None):
-        assert BuilderFlaskAppManager._get_bisslog_setup() is None
+def test_generate_use_case_code_http_trigger_without_mapper():
+    trigger = TriggerHttp(path="/hello", method="POST", mapper=None)
+    uc_info = UseCaseCodeInfoClass(name="myuc", docs="", module="mymod", class_name="UCClass")
+    result = BuilderFlaskAppManager._generate_use_case_code_http_trigger(
+        "my_uc", "my_uc_uc", uc_info, trigger, 1)
+    assert "def my_uc_handler_1()" in result.body
+    assert "my_uc_uc(**kwargs)" in result.body
+    assert "request.get_json" in result.body
 
 
-def test_get_bisslog_setup_with_setup_function():
-    setup_mock = MagicMock()
-    setup_mock.setup_function.n_params = 1
-    setup_mock.setup_function.function_name = "init_app"
-    setup_mock.setup_function.module = "config"
-    setup_mock.runtime = {}
-    with patch("bisslog_flask.builder.builder_flask_app_manager.get_setup_metadata", return_value=setup_mock):
-        result = BuilderFlaskAppManager._get_bisslog_setup()
-        assert "init_app(\"flask\")" in result.build
-        assert "config" in result.importing
-        assert "init_app" in result.importing["config"]
+def test_generate_use_case_code_http_trigger_with_mapper():
+    trigger = TriggerHttp(path="/hi", method="GET", mapper={"body": {"x": "int"}})
+    uc_info = UseCaseCodeInfoClass(name="myuc", docs="", module="mymod", class_name="UCClass")
+    result = BuilderFlaskAppManager._generate_use_case_code_http_trigger(
+        "my_uc", "my_uc_uc", uc_info, trigger, 2)
+    assert "res_map" in result.body
+    assert "my_uc_uc(**res_map)" in result.body
 
 
-def test_get_bisslog_setup_with_runtime_only():
-    setup_mock = MagicMock()
-    setup_mock.setup_function = None
-    runtime_info = MagicMock()
-    runtime_info.function_name = "custom_setup"
-    runtime_info.module = "custom_mod"
-    setup_mock.runtime = {"flask": runtime_info}
-    with patch("bisslog_flask.builder.builder_flask_app_manager.get_setup_metadata", return_value=setup_mock):
-        result = BuilderFlaskAppManager._get_bisslog_setup()
-        assert "custom_setup()" in result.build
-        assert "custom_mod" in result.importing
-        assert "custom_setup" in result.importing["custom_mod"]
+def test_generate_use_case_code_websocket_trigger_with_mapper():
+    trigger = TriggerWebsocket(route_key="room", mapper={"body": {"msg": "str"}})
+    uc_info = UseCaseCodeInfoObject(name="ws_uc", docs="", module="wsmod", var_name="ws_callable")
+    result = BuilderFlaskAppManager._generate_use_case_code_websocket_trigger(
+        "chat", "ws_callable", uc_info, trigger, 0)
+    assert "res_map = chat_ws_mapper_0.map" in result.build
+    assert "@sock.route(\"/ws/room\")" in result.build
+    assert "ws.send(response)" in result.build
+
+
+def test_generate_use_case_code_websocket_trigger_without_mapper():
+    trigger = TriggerWebsocket(route_key=None, mapper=None)
+    uc_info = UseCaseCodeInfoObject(name="ws_uc", docs="", module="wsmod", var_name="ws_callable")
+    result = BuilderFlaskAppManager._generate_use_case_code_websocket_trigger(
+        "chat", "ws_callable", uc_info, trigger, 1)
+    assert "payload = json.loads(data)" in result.build
+    assert "ws_callable(**payload)" in result.build
+    assert "@sock.route(\"/ws/chat.default\")" in result.build
