@@ -22,7 +22,7 @@ def test_run_invokes_flask_run(mock_bisslog_flask):
     mock_bisslog_flask.assert_called_once_with(
         metadata_file="metadata.yml",
         use_cases_folder_path="src/use_cases",
-        infra_folder_path=None,
+        infra_path=None,
         encoding="utf-16",
         secret_key="super-secret",
         jwt_secret_key="jwt-secret"

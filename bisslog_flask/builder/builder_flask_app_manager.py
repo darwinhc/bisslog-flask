@@ -8,15 +8,16 @@ configuration, and runtime setup.
 The generated code is returned as a full Python script and can be written to a file (e.g.,
 `flask_app.py`).
 """
-from typing import Optional
+from typing import Optional, Callable
 import json
 
 from bisslog_schema import read_full_service_metadata
+from bisslog_schema.eager_import_module_or_package import EagerImportModulePackage
 from bisslog_schema.schema import UseCaseInfo, TriggerHttp, TriggerWebsocket
 from bisslog_schema.setup import get_setup_metadata
 from bisslog_schema.use_case_code_inspector.use_case_code_metadata import UseCaseCodeInfo, \
     UseCaseCodeInfoClass, UseCaseCodeInfoObject
-from bisslog_flask.builder.static_python_construct_data import StaticPythonConstructData
+from .static_python_construct_data import StaticPythonConstructData
 
 
 class BuilderFlaskAppManager:
@@ -31,8 +32,12 @@ class BuilderFlaskAppManager:
     The result is a complete Flask application scaffold that can be directly executed
     or used as a starting point for further customization.
     """
-    @staticmethod
-    def _get_bisslog_setup() -> Optional[StaticPythonConstructData]:
+
+    def __init__(self, eager_importer: Callable[[str], None]):
+        self._eager_importer = eager_importer
+
+
+    def _get_bisslog_setup(self, infra_path: Optional[str]) -> Optional[StaticPythonConstructData]:
         """
         Retrieves the Bisslog setup call for the 'flask' runtime, if defined.
 
@@ -44,6 +49,7 @@ class BuilderFlaskAppManager:
         Optional[StaticPythonConstructData]
             The setup code and imports, or None if no setup was declared.
         """
+        self._eager_importer(infra_path)
         setup_metadata = get_setup_metadata()
         if setup_metadata is None:
             return None
@@ -266,7 +272,7 @@ if "JWT_SECRET_KEY" in os.environ:
     def __call__(self,
                  metadata_file: Optional[str] = None,
                  use_cases_folder_path: Optional[str] = None,
-                 infra_folder_path: Optional[str] = None,
+                 infra_path: Optional[str] = None,
                  *,
                  encoding: str = "utf-8",
                  secret_key: Optional[str] = None,
@@ -285,7 +291,7 @@ if "JWT_SECRET_KEY" in os.environ:
             Path to the YAML or JSON metadata file.
         use_cases_folder_path : str, optional
             Path to the folder where use case implementations are located.
-        infra_folder_path : str, optional
+        infra_path : str, optional
             Path to additional infrastructure or adapter code.
         encoding : str, default="utf-8"
             Encoding used to read the metadata file.
@@ -313,7 +319,7 @@ if "JWT_SECRET_KEY" in os.environ:
             importing={"flask": {"Flask"}, "os": None},
             build="app = Flask(__name__)"
         )
-        res += self._get_bisslog_setup()
+        res += self._get_bisslog_setup(infra_path)
 
         res += self._generate_security_code()
 
@@ -344,4 +350,4 @@ if "JWT_SECRET_KEY" in os.environ:
         return res.generate_boiler_plate_flask()
 
 
-bisslog_flask_builder = BuilderFlaskAppManager()
+bisslog_flask_builder = BuilderFlaskAppManager(EagerImportModulePackage(("src.infra", "infra")))

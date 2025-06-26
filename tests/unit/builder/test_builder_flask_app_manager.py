@@ -20,7 +20,7 @@ from bisslog_schema.use_case_code_inspector.use_case_code_metadata import (
 def test_get_bisslog_setup_with_setup_function(mock_get_setup, n_params, expected):
     setup_func = MagicMock(function_name="setup_func", module="setup_module", n_params=n_params)
     mock_get_setup.return_value = MagicMock(setup_function=setup_func, runtime={})
-    result = BuilderFlaskAppManager._get_bisslog_setup()
+    result = BuilderFlaskAppManager(lambda x: None)._get_bisslog_setup("something")
     assert expected in result.build
     assert "setup_module" in result.importing
 
@@ -29,14 +29,14 @@ def test_get_bisslog_setup_with_setup_function(mock_get_setup, n_params, expecte
 def test_get_bisslog_setup_with_runtime_fallback(mock_get_setup):
     runtime_func = MagicMock(function_name="custom_setup", module="runtime_module")
     mock_get_setup.return_value = MagicMock(setup_function=None, runtime={"flask": runtime_func})
-    result = BuilderFlaskAppManager._get_bisslog_setup()
+    result = BuilderFlaskAppManager(lambda x: None)._get_bisslog_setup("something")
     assert "custom_setup()" in result.build
     assert "runtime_module" in result.importing
 
 
 @patch("bisslog_flask.builder.builder_flask_app_manager.get_setup_metadata", return_value=None)
 def test_get_bisslog_setup_none(mock_get_setup):
-    result = BuilderFlaskAppManager._get_bisslog_setup()
+    result = BuilderFlaskAppManager(lambda x: None)._get_bisslog_setup("something")
     assert result is None
 
 
