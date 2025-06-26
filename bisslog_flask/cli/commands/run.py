@@ -13,7 +13,7 @@ from bisslog_flask import BisslogFlask
 
 def run(metadata_file: Optional[str] = None,
         use_cases_folder_path: Optional[str] = None,
-        infra_folder_path: Optional[str] = None,
+        infra_path: Optional[str] = None,
         encoding: str = "utf-8",
         secret_key: Optional[str] = None,
         jwt_secret_key: Optional[str] = None):
@@ -30,7 +30,7 @@ def run(metadata_file: Optional[str] = None,
         Path to the metadata file (YAML or JSON) containing service and trigger definitions.
     use_cases_folder_path : str, optional
         Path to the folder where the use case implementation code is located.
-    infra_folder_path : str, optional
+    infra_path : str, optional
         Path to the folder containing infrastructure code (e.g., database, cache).
         This is not used in the current implementation but can be extended.
     encoding : str, optional
@@ -43,7 +43,7 @@ def run(metadata_file: Optional[str] = None,
     app = BisslogFlask(
         metadata_file=metadata_file,
         use_cases_folder_path=use_cases_folder_path,
-        infra_folder_path=infra_folder_path,
+        infra_path=infra_path,
         encoding=encoding,
         secret_key=secret_key,
         jwt_secret_key=jwt_secret_key

@@ -50,7 +50,7 @@ def test_call_generates_complete_flask_code(
         discovered_use_cases=discovered_use_cases
     )
 
-    manager = BuilderFlaskAppManager()
+    manager = BuilderFlaskAppManager(lambda x: None)
     result = manager(metadata_file="file.yaml", use_cases_folder_path="./src")
 
     assert "Flask(__name__)" in result

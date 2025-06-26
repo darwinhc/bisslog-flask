@@ -45,7 +45,7 @@ class InitFlaskAppManager:
 
     def __init__(self, http_processor: BisslogFlaskResolver,
                  websocket_processor: BisslogFlaskResolver,
-                 force_import: EagerImportModulePackage) -> None:
+                 force_import: Callable[[str], None]) -> None:
         self._http_processor = http_processor
         self._websocket_processor = websocket_processor
         self._force_import = force_import
@@ -54,7 +54,7 @@ class InitFlaskAppManager:
             self,
             metadata_file: Optional[str] = None,
             use_cases_folder_path: Optional[str] = None,
-            infra_folder_path: Optional[str] = None,
+            infra_path: Optional[str] = None,
             app: Optional[Flask] = None,
             *,
             encoding: str = "utf-8",
@@ -74,6 +74,9 @@ class InitFlaskAppManager:
             Path to the metadata file (YAML/JSON).
         use_cases_folder_path : str, optional
             Directory where use case code is located.
+        infra_path : str, optional
+            Path to the folder where infrastructure components (e.g., adapters) are defined.
+            This is used to ensure that necessary modules are imported before route registration.
         app : Flask, optional
             An existing Flask app instance to which routes will be added.
             If not provided, a new app is created using the service name.
@@ -100,7 +103,7 @@ class InitFlaskAppManager:
         use_cases = full_service_data.discovered_use_cases
 
         # Force import
-        self._force_import(infra_folder_path)
+        self._force_import(infra_path)
         # Run global setup if defined
         run_setup("flask")
 
