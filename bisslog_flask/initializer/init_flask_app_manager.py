@@ -18,6 +18,8 @@ Dependencies
 from typing import Optional, Callable
 
 from bisslog_schema import read_service_info_with_code
+from bisslog_schema.eager_import_module_or_package import EagerImportModulePackage
+from bisslog_schema.setup import run_setup
 from bisslog_schema.schema import UseCaseInfo, TriggerHttp, TriggerWebsocket
 from flask import Flask
 
@@ -42,14 +44,17 @@ class InitFlaskAppManager:
     """
 
     def __init__(self, http_processor: BisslogFlaskResolver,
-                 websocket_processor: BisslogFlaskResolver) -> None:
+                 websocket_processor: BisslogFlaskResolver,
+                 force_import: Callable[[str], None]) -> None:
         self._http_processor = http_processor
         self._websocket_processor = websocket_processor
+        self._force_import = force_import
 
     def __call__(
             self,
             metadata_file: Optional[str] = None,
             use_cases_folder_path: Optional[str] = None,
+            infra_path: Optional[str] = None,
             app: Optional[Flask] = None,
             *,
             encoding: str = "utf-8",
@@ -69,6 +74,9 @@ class InitFlaskAppManager:
             Path to the metadata file (YAML/JSON).
         use_cases_folder_path : str, optional
             Directory where use case code is located.
+        infra_path : str, optional
+            Path to the folder where infrastructure components (e.g., adapters) are defined.
+            This is used to ensure that necessary modules are imported before route registration.
         app : Flask, optional
             An existing Flask app instance to which routes will be added.
             If not provided, a new app is created using the service name.
@@ -93,6 +101,11 @@ class InitFlaskAppManager:
         )
         service_info = full_service_data.declared_metadata
         use_cases = full_service_data.discovered_use_cases
+
+        # Force import
+        self._force_import(infra_path)
+        # Run global setup if defined
+        run_setup("flask")
 
         # Initialize Flask app
         if app is None:
@@ -120,4 +133,5 @@ class InitFlaskAppManager:
         return app
 
 
-BisslogFlask = InitFlaskAppManager(BisslogFlaskHttpResolver(), BisslogFlaskWebSocketResolver())
+BisslogFlask = InitFlaskAppManager(BisslogFlaskHttpResolver(), BisslogFlaskWebSocketResolver(),
+                                   EagerImportModulePackage(("src.infra", "infra")))
