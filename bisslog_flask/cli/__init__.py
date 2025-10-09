@@ -1,3 +1,4 @@
+"""Command-line interface for the `bisslog_flask` package."""
 import os
 import sys
 import argparse
@@ -62,7 +63,8 @@ def main():
     build_parser.add_argument("--encoding", type=str, default="utf-8",
                               help="File encoding (default: utf-8).")
     build_parser.add_argument("--target-filename", type=str, default="flask_app.py",
-                              help="Filename to write the generated boilerplate (default: flask_app.py)")
+                              help="Filename to write the generated "
+                                   "boilerplate (default: flask_app.py)")
 
     args = parser.parse_args()
 
@@ -82,7 +84,7 @@ def main():
                 encoding=args.encoding,
                 target_filename=args.target_filename
             )
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         traceback.print_exc()
         print(e)
         sys.exit(1)
