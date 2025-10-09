@@ -16,8 +16,9 @@ Dependencies
 - bisslog_schema
 - bisslog.utils.mapping
 """
+import inspect
 from copy import deepcopy
-from typing import Callable, Optional, Dict
+from typing import Callable, Optional, Dict, Union, Awaitable, Any
 
 from flask import Flask, request, jsonify
 try:
@@ -109,10 +110,46 @@ class BisslogFlaskHttpResolver(BisslogFlaskResolver):
         use_case_fn_copy = deepcopy(fn)
         __mapper__ = Mapper(name=f"Mapper {use_case_name}", base=mapper) if mapper else None
 
-        def uc(*args, **kwargs):
-            return BisslogFlaskHttpResolver._lambda_fn(
-                *args, fn=use_case_fn_copy, __mapper__=__mapper__, **kwargs
-            )
+        is_async = inspect.iscoroutinefunction(fn)
+
+        if is_async:
+            async def uc(*args, **kwargs):
+                if __mapper__ is None:
+                    more_kwargs = {}
+                    if request.method.lower() != "get":
+                        more_kwargs.update(request.get_json(silent=True) or {})
+                    res = await use_case_fn_copy(*args, **kwargs, **more_kwargs)
+                    return jsonify(res)
+
+                res_map = __mapper__.map({
+                    "path_query": request.view_args or {},
+                    "body": request.get_json(silent=True) or {},
+                    "params": request.args.to_dict(),
+                    "headers": request.headers,
+                })
+                res = await use_case_fn_copy(**res_map)
+                return jsonify(res)
+
+            view = uc
+        else:
+            def uc(*args, **kwargs):
+                if __mapper__ is None:
+                    more_kwargs = {}
+                    if request.method.lower() != "get":
+                        more_kwargs.update(request.get_json(silent=True) or {})
+                    res = use_case_fn_copy(*args, **kwargs, **more_kwargs)
+                    return jsonify(res)
+
+                res_map = __mapper__.map({
+                    "path_query": request.view_args or {},
+                    "body": request.get_json(silent=True) or {},
+                    "params": request.args.to_dict(),
+                    "headers": request.headers,
+                })
+                res = use_case_fn_copy(**res_map)
+                return jsonify(res)
+
+            view = uc
 
         # Apply CORS dynamically if allowed
         if trigger and trigger.allow_cors:
@@ -124,13 +161,13 @@ class BisslogFlaskHttpResolver(BisslogFlaskResolver):
                 "allow_headers": ["Content-Type", "Authorization"],
                 "supports_credentials": True
             }
-            return cross_origin(**cors_kwargs)(uc)
+            return cross_origin(**cors_kwargs)(view)
 
-        return uc
+        return view
 
     @classmethod
     def _add_use_case(cls, app: Flask, use_case_info: UseCaseInfo, trigger: TriggerInfo,
-                      use_case_function):
+                      use_case_function: Union[Callable[..., Any], Callable[..., Awaitable[Any]]]):
         """
         Adds an HTTP endpoint to the Flask app for a given use case.
 
