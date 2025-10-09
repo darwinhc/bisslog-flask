@@ -18,7 +18,7 @@ def run(metadata_file: Optional[str] = None,
         secret_key: Optional[str] = None,
         jwt_secret_key: Optional[str] = None):
     """
-    Run a Flask application using metadata and use case source.
+    Run a Flask application using metadata and use-case source.
 
     This function creates and runs a Flask app configured through the
     BisslogFlask integration layer. It loads metadata definitions,
