@@ -8,14 +8,15 @@ configuration, and runtime setup.
 The generated code is returned as a full Python script and can be written to a file (e.g.,
 `flask_app.py`).
 """
-from typing import Optional
 import json
+from typing import Optional
 
 from bisslog_schema import read_full_service_metadata
 from bisslog_schema.schema import UseCaseInfo, TriggerHttp, TriggerWebsocket
 from bisslog_schema.setup import get_setup_metadata
 from bisslog_schema.use_case_code_inspector.use_case_code_metadata import UseCaseCodeInfo, \
     UseCaseCodeInfoClass, UseCaseCodeInfoObject
+
 from bisslog_flask.builder.static_python_construct_data import StaticPythonConstructData
 
 

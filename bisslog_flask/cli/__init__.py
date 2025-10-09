@@ -1,11 +1,11 @@
 """Command-line interface for the `bisslog_flask` package."""
+import argparse
 import os
 import sys
-import argparse
 import traceback
 
-from .commands.run import run
 from .commands.build import build_boiler_plate_flask
+from .commands.run import run
 
 
 def main():

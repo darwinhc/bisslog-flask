@@ -1,14 +1,14 @@
 # test_builder_flask_app_manager.py
 
-import pytest
-import json
 from unittest.mock import patch, MagicMock
-from bisslog_flask.builder.builder_flask_app_manager import BuilderFlaskAppManager
-from bisslog_flask.builder.static_python_construct_data import StaticPythonConstructData
+
+import pytest
 from bisslog_schema.schema import TriggerHttp, TriggerWebsocket
 from bisslog_schema.use_case_code_inspector.use_case_code_metadata import (
     UseCaseCodeInfoClass, UseCaseCodeInfoObject, UseCaseCodeInfo
 )
+
+from bisslog_flask.builder.builder_flask_app_manager import BuilderFlaskAppManager
 
 
 @pytest.mark.parametrize("n_params,expected", [

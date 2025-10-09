@@ -10,7 +10,9 @@ The generated code supports HTTP and WebSocket routes, environment-based securit
 configuration, and respects the Bisslog runtime setup defined via decorators.
 """
 from typing import Optional
+
 from ...builder.builder_flask_app_manager import bisslog_flask_builder
+
 
 def build_boiler_plate_flask(
         metadata_file: Optional[str] = None,

@@ -7,6 +7,7 @@ configure event routes (via `route_key`) and binds them to corresponding use cas
 """
 import inspect
 from typing import Callable
+
 from flask import Flask, request
 
 try:

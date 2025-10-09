@@ -1,13 +1,14 @@
-import pytest
-from flask import Flask
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from bisslog_flask.initializer.init_flask_app_manager import InitFlaskAppManager
+import pytest
 from bisslog_schema.schema import TriggerInfo
 from bisslog_schema.schema.triggers.trigger_http import TriggerHttp
 from bisslog_schema.schema.triggers.trigger_websocket import TriggerWebsocket
 from bisslog_schema.schema.use_case_info import UseCaseInfo
-from types import SimpleNamespace
+from flask import Flask
+
+from bisslog_flask.initializer.init_flask_app_manager import InitFlaskAppManager
 
 
 @pytest.fixture

@@ -9,7 +9,6 @@ from abc import ABC, abstractmethod
 from typing import Callable
 
 from bisslog_schema.schema import UseCaseInfo, TriggerInfo
-
 from flask import Flask
 
 
