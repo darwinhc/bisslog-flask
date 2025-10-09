@@ -19,8 +19,8 @@ from typing import Optional, Callable
 
 from bisslog_schema import read_service_info_with_code
 from bisslog_schema.eager_import_module_or_package import EagerImportModulePackage
-from bisslog_schema.setup import run_setup
 from bisslog_schema.schema import UseCaseInfo, TriggerHttp, TriggerWebsocket
+from bisslog_schema.setup import run_setup
 from flask import Flask
 
 from .bisslog_flask_http_resolver import BisslogFlaskHttpResolver

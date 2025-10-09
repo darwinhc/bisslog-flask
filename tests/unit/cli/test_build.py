@@ -1,8 +1,6 @@
-# test_cli_build_boilerplate.py
-
-import builtins
-import pytest
+"""Tests for the build command."""
 from unittest.mock import patch, mock_open
+
 from bisslog_flask.cli.commands.build import build_boiler_plate_flask
 
 
