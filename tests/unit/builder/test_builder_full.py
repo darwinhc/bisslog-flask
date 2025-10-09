@@ -1,13 +1,14 @@
 # test_builder_flask_app_manager_call.py
 
-import pytest
 from unittest.mock import patch, MagicMock
-from bisslog_flask.builder.builder_flask_app_manager import BuilderFlaskAppManager
-from bisslog_flask.builder.static_python_construct_data import StaticPythonConstructData
+
 from bisslog_schema.schema import TriggerHttp, TriggerWebsocket, UseCaseInfo
 from bisslog_schema.use_case_code_inspector.use_case_code_metadata import (
-    UseCaseCodeInfoClass, UseCaseCodeInfoObject
+    UseCaseCodeInfoClass
 )
+
+from bisslog_flask.builder.builder_flask_app_manager import BuilderFlaskAppManager
+from bisslog_flask.builder.static_python_construct_data import StaticPythonConstructData
 
 
 @patch("bisslog_flask.builder.builder_flask_app_manager.read_full_service_metadata")
@@ -41,7 +42,8 @@ def test_call_generates_complete_flask_code(
 
     discovered_use_cases = {
         "my_use_case": UseCaseCodeInfoClass(
-            name="my_use_case", docs=None, module="uc_module", class_name="UseCase"
+            name="my_use_case", docs=None, module="uc_module", class_name="UseCase",
+            is_coroutine=False
         )
     }
 

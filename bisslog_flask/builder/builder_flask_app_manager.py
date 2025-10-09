@@ -8,6 +8,7 @@ configuration, and runtime setup.
 The generated code is returned as a full Python script and can be written to a file (e.g.,
 `flask_app.py`).
 """
+
 from typing import Optional, Callable
 import json
 
@@ -17,6 +18,7 @@ from bisslog_schema.schema import UseCaseInfo, TriggerHttp, TriggerWebsocket
 from bisslog_schema.setup import get_setup_metadata
 from bisslog_schema.use_case_code_inspector.use_case_code_metadata import UseCaseCodeInfo, \
     UseCaseCodeInfoClass, UseCaseCodeInfoObject
+
 from .static_python_construct_data import StaticPythonConstructData
 
 
@@ -147,6 +149,9 @@ if "JWT_SECRET_KEY" in os.environ:
         StaticPythonConstructData
             The generated code for the HTTP trigger.
         """
+        imports = {
+            "flask": {"jsonify"}
+        }
         starting_build = ""
         mapper_code_lines = []
         if trigger_info.mapper is not None:
@@ -155,7 +160,7 @@ if "JWT_SECRET_KEY" in os.environ:
                                f"base={json.dumps(trigger_info.mapper)})")
             mapper_code_lines.append(f"""
     res_map = {mapper_name}.map({{
-        "path_query": request.view_args or {{}},
+        "path_query": route_vars,
         "body": request.get_json(silent=True) or {{}},
         "params": request.args.to_dict(),
         "headers": request.headers,
@@ -166,20 +171,33 @@ if "JWT_SECRET_KEY" in os.environ:
 
         lines = [
             f'@app.route("{flask_path}", methods=["{method}"])',
-            f'def {handler_name}():',
         ]
+
+        if use_case_code_info.is_coroutine:
+            lines.append(f"async def {handler_name}(**route_vars):")
+        else:
+            lines.append(f"def {handler_name}(**route_vars):")
+
         if not mapper_code_lines:
             lines.append("    kwargs = {}")
-            lines.append("    kwargs.update(request.view_args or {})")
+            lines.append("    kwargs.update(route_vars)")
             lines.append("    kwargs.update(request.get_json(silent=True) or {})")
             lines.append("    kwargs.update(request.args.to_dict())")
             lines.append("    kwargs.update(dict(request.headers))")
-            lines.append(f"    return {uc_callable}(**kwargs)\n")
+            var_to_unpack = "kwargs"
         else:
             lines.extend(mapper_code_lines)
-            lines.append(f'    return {uc_callable}(**res_map)\n')
+            var_to_unpack = "res_map"
 
-        return StaticPythonConstructData(build=starting_build, body="\n".join(lines))
+        if use_case_code_info.is_coroutine:
+            lines.append(f'    result = await {uc_callable}(**{var_to_unpack})')
+        else:
+            lines.append(f'    result = {uc_callable}(**{var_to_unpack})\n')
+
+        lines.append('    return jsonify(result)\n')
+
+        return StaticPythonConstructData(build=starting_build,
+                                         body="\n".join(lines), importing=imports)
 
     @staticmethod
     def _generate_use_case_code_websocket_trigger(
@@ -217,7 +235,7 @@ if "JWT_SECRET_KEY" in os.environ:
         imports = {
             use_case_code_info.module: {use_case_code_info.name},
             "flask_sock": {"Sock"},
-            "flask": {"request"},
+            "flask": {"request", "jsonify"},
             "bisslog.utils.mapping": {"Mapper"},
             "json": None
         }

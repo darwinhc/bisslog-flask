@@ -1,7 +1,9 @@
-import pytest
-import sys
 import os
+import sys
 from unittest.mock import patch, MagicMock
+
+import pytest
+
 from bisslog_flask import cli as cli_module
 
 

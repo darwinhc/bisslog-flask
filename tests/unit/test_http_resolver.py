@@ -1,9 +1,10 @@
-import pytest
-from flask import Flask
 from unittest.mock import Mock
 
-from bisslog_flask.initializer.bisslog_flask_http_resolver import BisslogFlaskHttpResolver
+import pytest
 from bisslog_schema.schema import UseCaseInfo, TriggerHttp, TriggerInfo
+from flask import Flask
+
+from bisslog_flask.initializer.bisslog_flask_http_resolver import BisslogFlaskHttpResolver
 
 
 @pytest.fixture

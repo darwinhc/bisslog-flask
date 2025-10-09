@@ -1,11 +1,12 @@
-import pytest
-from flask import Flask
-from flask_socketio import SocketIO
 from unittest.mock import Mock, MagicMock
 
-from bisslog_flask.initializer.bisslog_flask_ws_resolver import BisslogFlaskWebSocketResolver
+import pytest
 from bisslog_schema.schema import UseCaseInfo, TriggerInfo, TriggerConsumer
 from bisslog_schema.schema.triggers.trigger_websocket import TriggerWebsocket
+from flask import Flask
+from flask_socketio import SocketIO
+
+from bisslog_flask.initializer.bisslog_flask_ws_resolver import BisslogFlaskWebSocketResolver
 
 
 @pytest.fixture
