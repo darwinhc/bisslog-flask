@@ -24,19 +24,35 @@ def fake_use_case_info():
     )
 
 @pytest.fixture
+def fake_use_case_info_with_async():
+    http_trigger = TriggerInfo(keyname="http_trigger", type="http", options=TriggerHttp(method="GET", path="/test2"))
+
+    return UseCaseInfo(
+        keyname="sample_coroutine_uc",
+        name="sample_coroutine_uc",
+        description="desc",
+        type="async",
+        triggers=[http_trigger]
+    )
+
+@pytest.fixture
 def fake_force_import():
     force_import = MagicMock()
     return force_import
 
 
 @pytest.fixture
-def mock_read_service_info_with_code(fake_use_case_info):
+def mock_read_service_info_with_code(fake_use_case_info, fake_use_case_info_with_async):
+
+    async def mock_coroutine(*args, **kwargs):
+        return {"sample_coroutine_res": 23}
+
     return SimpleNamespace(
         declared_metadata=SimpleNamespace(
             name="TestService",
-            use_cases={"sample_uc": fake_use_case_info}
+            use_cases={"sample_uc": fake_use_case_info, "sample_coroutine_uc": fake_use_case_info_with_async}
         ),
-        discovered_use_cases={"sample_uc": lambda: {"ok": True}}
+        discovered_use_cases={"sample_uc": lambda: {"ok": True}, "sample_coroutine_uc": mock_coroutine},
     )
 
 
@@ -57,7 +73,7 @@ def test_init_flask_app_registers_routes(monkeypatch, fake_use_case_info,
 
     # Assert
     assert isinstance(app, Flask)
-    mock_http.assert_called_once()
+    assert mock_http.call_count == 2
     mock_ws.assert_called_once()
 
 

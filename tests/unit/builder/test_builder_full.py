@@ -41,7 +41,8 @@ def test_call_generates_complete_flask_code(
 
     discovered_use_cases = {
         "my_use_case": UseCaseCodeInfoClass(
-            name="my_use_case", docs=None, module="uc_module", class_name="UseCase"
+            name="my_use_case", docs=None, module="uc_module", class_name="UseCase",
+            is_coroutine=False
         )
     }
 
