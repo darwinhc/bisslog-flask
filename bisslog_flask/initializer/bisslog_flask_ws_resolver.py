@@ -5,7 +5,9 @@ This module defines the `BisslogFlaskWebSocketResolver` class, which dynamically
 WebSocket-based use case triggers in a Flask app. The class uses metadata definitions to
 configure event routes (via `route_key`) and binds them to corresponding use case functions.
 """
+import inspect
 from typing import Callable
+
 from flask import Flask, request
 
 try:
@@ -64,13 +66,27 @@ class BisslogFlaskWebSocketResolver(BisslogFlaskResolver):
             base=trigger_info.options.mapper
         ) if trigger_info.options.mapper else None
 
-        @socket_io_obj.on(route_key)
-        def on_event(data):
-            mapped_data = mapper.map({
-                "route_key": route_key,
-                "connection_id": request.sid,
-                "body": data,
-                "headers": dict(request.headers)
-            }) if mapper else data
+        is_async = inspect.iscoroutinefunction(use_case_callable)
 
-            return use_case_callable(**mapped_data) if mapper else use_case_callable(data)
+        if is_async:
+            @socket_io_obj.on(route_key)
+            async def on_event(data):
+                mapped_data = mapper.map({
+                    "route_key": route_key,
+                    "connection_id": request.sid,
+                    "body": data,
+                    "headers": dict(request.headers)
+                }) if mapper else data
+
+                return await use_case_callable(**mapped_data) if mapper else use_case_callable(data)
+        else:
+            @socket_io_obj.on(route_key)
+            def on_event(data):
+                mapped_data = mapper.map({
+                    "route_key": route_key,
+                    "connection_id": request.sid,
+                    "body": data,
+                    "headers": dict(request.headers)
+                }) if mapper else data
+
+                return use_case_callable(**mapped_data) if mapper else use_case_callable(data)
