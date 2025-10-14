@@ -6,6 +6,7 @@ import asyncio
 from unittest.mock import Mock
 
 import pytest
+import flask
 from flask import Flask
 
 from bisslog_schema.schema import UseCaseInfo, TriggerHttp, TriggerInfo
@@ -14,6 +15,10 @@ from bisslog_schema.schema.triggers.trigger_mappable import TriggerMappable
 from bisslog_flask.initializer.bisslog_flask_http_resolver import BisslogFlaskHttpResolver
 
 
+pytestmark = pytest.mark.skipif(
+    tuple(map(int, flask.__version__.split(".")[:2])) < (2, 2),
+    reason="Async views need Flask >= 2.2",
+)
 
 @pytest.fixture
 def flask_app():
