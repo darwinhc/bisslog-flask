@@ -12,8 +12,8 @@ authors = [
 ]
 requires-python = ">=3.7"
 dependencies = [
-    "bisslog>=0.0.7",
-    "bisslog-schema>=0.0.6",
+    "bisslog>=0.0.9",
+    "bisslog-schema>=0.0.10",
     "flask"
 ]
 classifiers = [
@@ -28,6 +28,7 @@ Homepage = "https://github.com/darwinhc/bisslog-flask"
 [project.optional-dependencies]
 websocket = ["flask-socketio"]
 cors = ["flask-cors>=6.0.0"]
+async = ["Flask[async]>=2.2"]
 
 [project.scripts]
 bisslog_flask = "bisslog_flask.cli:main"
