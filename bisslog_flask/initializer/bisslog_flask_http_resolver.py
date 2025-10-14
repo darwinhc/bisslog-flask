@@ -84,10 +84,10 @@ class BisslogFlaskHttpResolver(BisslogFlaskResolver):
 
     @staticmethod
     def _use_case_factory(
-            use_case_name: str,
-            fn: Callable,
-            mapper: Optional[Dict[str, str]] = None,
-            trigger: Optional[TriggerHttp] = None
+        use_case_name: str,
+        fn: Callable,
+        mapper: Optional[Dict[str, str]] = None,
+        trigger: Optional[TriggerHttp] = None
     ):
         """
         Factory to produce a Flask view function with optional mapping and CORS.
@@ -111,7 +111,10 @@ class BisslogFlaskHttpResolver(BisslogFlaskResolver):
         use_case_fn_copy = deepcopy(fn)
         __mapper__ = Mapper(name=f"Mapper {use_case_name}", base=mapper) if mapper else None
 
-        is_async = inspect.iscoroutinefunction(fn)
+        is_async = (
+            inspect.iscoroutinefunction(fn)
+            or inspect.iscoroutinefunction(getattr(fn, "__call__", None))
+        )
 
         if is_async:
             async def uc(*args, **kwargs):
